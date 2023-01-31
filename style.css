@@ -1,0 +1,156 @@
+.html, body {
+    padding: 0;
+    margin: 0;
+}
+
+.stories-carousel {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(10px);
+    position: relative;
+    column-gap: 50px;
+    overflow: hidden;
+    width: 100vw;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 700,
+  'GRAD' 200,
+  'opsz' 24
+}
+
+
+.story {
+    min-width: 340px;
+    max-width: 340px;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: black;
+    position: relative;
+    transform: scale(0.8);
+    transition: 0.5s ease-in-out;
+}
+
+.story.focused {
+    transform: unset;
+    margin: 0 100px;
+}
+
+.page-media-container {
+    box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 134);
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+.disabled {
+    height: 0% !important;
+}
+
+.page-media-container img, .page-media-container video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    flex-grow: 0;
+    object-fit: cover;
+}
+
+.banner {
+    text-decoration: none;
+    display: block;
+    padding: 5px;
+    width: 90%;
+    margin-left: 5%;
+    border-radius: 5px;
+    z-index: 999;
+    position: relative;
+    bottom: 50px;
+    background-color: black;
+    color: white;
+    font-family: sans-serif;
+}
+
+.image {
+    height: 100%;
+}
+
+.hidden {
+    visibility: hidden;
+    height: 0 !important;
+    width: 0;
+}
+
+.page {
+    width: 100%;
+    aspect-ratio: 10/19;
+}
+
+.progress-bar-container {
+    width: 90%;
+    top: 20px;
+    display: flex;
+    position: absolute;
+    z-index: 999;
+    column-gap: 10px;
+    display: flex;
+}
+
+.img-cover {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.723), transparent 20%);
+}
+
+.story-page-progress-bar {
+    height: 5px;
+    border-radius: 5px;
+    border: none;
+    background: rgba(255, 255, 255, 0.4);
+    width: 100%;
+}
+
+.story-page-progress-bar::-moz-range-thumb {
+    width: 0px;
+    height: 0px;
+    border-radius: 50%;
+    background: #04AA6D;
+    cursor: pointer;
+    visibility: hidden;
+}
+
+.timer::-moz-range-track {
+    background-color: #ffffff39;
+    border-radius: 5px;
+    border: none;
+}
+
+.story-page-progress-bar::-moz-range-progress {
+    background-color: white;
+    border-radius: 5px;
+    border: none;
+}
+
+.buttonBar {
+    position: relative;
+    top: 30px;
+    margin-bottom: -40px;
+    z-index: 999;
+    width: 100%;
+    text-align: right;
+    right: 30px;
+}
+
+.buttonBar span {
+    color: white;
+    margin: 0 5px;
+}
