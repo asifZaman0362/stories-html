@@ -77,7 +77,7 @@ class Story {
         storyElement.appendChild(buttonBar);
         storyElement.appendChild(mediaWrapper);
 
-        let vid = undefined;
+        let vid = null;
 
         for (var page_data of pages) {
             let page = new StoryPage(page_data);
@@ -118,7 +118,7 @@ class Story {
             this.video_element.classList.remove('hidden');
             this.video_element.src = page.data.src;
             this.image_element.classList.add('hidden');
-            //this.video_element.play();
+            //this.video_element.play(); // Autoplay takes care of this
         }
         page.progressBar.value = 0;
         this.playing = true;
@@ -126,6 +126,7 @@ class Story {
     }
 
     prevPage() {
+        if (this.video_element) this.video_element.pause();
         if (this.page_index == 0) {
             return false;
         } else {
@@ -168,6 +169,15 @@ class Story {
             this.muted = !this.muted;
         }
     }
+    
+    stop() {
+        if (this.video_element && this.pages[this.page_index].data.type == "video") {
+            this.video_element.pause();
+        }
+        this.buttonPlay.classList.replace('fa-play', 'fa-pause');
+        pause();
+        this.playing = false;
+    }
 
     togglePlaying() {
         if (this.playing) {
@@ -193,6 +203,7 @@ let started = false;
 let ended = false;
 let focused_story = null;
 let timer = null;
+let main_element = null;
 
 function createProgressBar() {
     let progressBar = document.createElement('input');
@@ -207,15 +218,25 @@ function createProgressBar() {
 function generateDom() {
     let background = document.createElement('div');
     background.className = "transparent-background-carousel";
+    main_element = background;
+
     carousel = document.createElement('div');
     carousel.className = "stories-carousel";
     background.appendChild(carousel);
     document.body.appendChild(background);
+
+    let closeButton = document.createElement('i');
+    closeButton.classList.add('fa-solid', 'fa-xmark', 'close-button');
+    closeButton.onclick = closeCarousel;
+    background.appendChild(closeButton);
+
 }
 
 function init() {
     generateDom();
     createStories(story_data);
+    closeCarousel();
+    createGallery(story_data);
 }
 
 function createStories(stories_data) {
@@ -224,7 +245,63 @@ function createStories(stories_data) {
         story_elements.push(story);
         carousel.appendChild(story.parent);
     }
-    start();
+    //start();
+}
+
+function getVideoCover(file, seekTo = 1.0) {
+    console.log("getting video cover for file: ", file);
+    return new Promise((resolve, reject) => {
+        // load the file to a video player
+        const videoPlayer = document.createElement('video');
+        videoPlayer.setAttribute('src', file);
+        videoPlayer.load();
+        videoPlayer.addEventListener('error', (ex) => {
+            reject("error when loading video file", ex);
+        });
+        // load metadata of the video to get video duration and dimensions
+        videoPlayer.addEventListener('loadedmetadata', () => {
+            // seek to user defined timestamp (in seconds) if possible
+            if (videoPlayer.duration < seekTo) {
+                reject("video is too short.");
+                return;
+            }
+            // delay seeking or else 'seeked' event won't fire on Safari
+            setTimeout(() => {
+              videoPlayer.currentTime = seekTo;
+            }, 200);
+            // extract video thumbnail once seeking is complete
+            videoPlayer.addEventListener('seeked', () => {
+                console.log('video is now paused at %ss.', seekTo);
+                // define a canvas to have the same dimension as the video
+                const canvas = document.createElement("canvas");
+                canvas.width = videoPlayer.videoWidth;
+                canvas.height = videoPlayer.videoHeight;
+                // draw the video frame to canvas
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(videoPlayer, 0, 0);
+                resolve(ctx.canvas);
+            });
+        });
+    });
+}
+
+async function createGallery(stories_data) {
+    let gallery_target = document.getElementById("stories-gallery");
+    let index = 0;
+    for (var data of stories_data) {
+        let image = null;
+        if (data[0].type == "video") {
+            let canvas = await getVideoCover(data[0].src);
+            gallery_target.appendChild(canvas);
+            continue;
+        } else {
+            image = document.createElement('img');
+            image.src = data[0].src;
+        }
+        image.className = 'stories-gallery-image';
+        //image.setAttribute('index', index++);
+        gallery_target.appendChild(image);
+    }
 }
 
 function nextPage() {
@@ -299,6 +376,7 @@ function prevStory() {
 
 // don't call this manually, only story objects are meant to call this function
 function pause() {
+    if (!timer) return;
     clearInterval(timer);
     timer = null;
 }
@@ -336,6 +414,19 @@ function restartInterval() {
 
 function stopInterval() {
     clearInterval(timer);
+}
+
+function halt() {
+    clearInterval(timer);
+    timer = null;
+    if (focused_story != undefined && story_elements.length > focused_story) {
+        story_elements[focused_story].stop();
+    }
+}
+
+function closeCarousel() {
+    halt();
+    main_element.classList.add('behind');
 }
 
 function start() {

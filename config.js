@@ -18,8 +18,8 @@ const story_data = [
     ],
     [ 
         new PageData(
-            "https://c2j4f2d2.stackpathcdn.com/Assets/PhonesAndDevices/Overview/iPhone11/iPhone11_A_Available.jpg",
-            "image",
+            "bbb.mp4",
+            "video",
             "nothing to see here!"
         ),
         new PageData(
