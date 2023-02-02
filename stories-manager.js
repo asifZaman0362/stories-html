@@ -53,7 +53,7 @@ class Story {
         this.buttonMute = document.createElement('i');
         this.buttonMute.classList.add('fa-solid', 'fa-volume-high');
         this.buttonPlay = document.createElement('i');
-        this.buttonPlay.classList.add('fa-solid', 'fa-play');
+        this.buttonPlay.classList.add('fa-solid', 'fa-pause');
         buttonBar.appendChild(this.buttonMute);
         buttonBar.appendChild(this.buttonPlay);
         this.buttonPlay.onclick = togglePlayPause;
@@ -63,7 +63,7 @@ class Story {
         mediaWrapper.className = "page-media-container";
 
         this.video_element = document.createElement('video');
-        this.video_element.autoplay = true;
+        this.video_element.autoplay = false;
         this.image_element = document.createElement('img');
 
         let cover = document.createElement('div');
@@ -118,7 +118,25 @@ class Story {
             this.video_element.classList.remove('hidden');
             this.video_element.src = page.data.src;
             this.image_element.classList.add('hidden');
-            //this.video_element.play(); // Autoplay takes care of this
+            this.video_element.play();
+            let startPlayPromise = this.video_element.play();
+
+            if (startPlayPromise !== undefined) {
+                startPlayPromise.then(() => {
+                    // Start whatever you need to do only after playback
+                    // has begun.
+                    this.playing = true;
+                }).catch(error => {
+                    if (error.name === "NotAllowedError") {
+                        this.playing = false;
+                        pause();
+                    } else {
+                        this.playing = false;
+                        pause();
+                    }
+                });
+            }
+
         }
         page.progressBar.value = 0;
         this.playing = true;
@@ -147,6 +165,10 @@ class Story {
     }
     
     tick() {
+        if (this.pages[this.page_index].data.type == 'video' && !this.playing) {
+            this.buttonPlay.classList.replace('fa-pause', 'fa-play');
+            return true;
+        }
         let progressBar = this.pages[this.page_index].progressBar;
         if (progressBar.value >= Math.floor(progressBar.max)) {
             return this.nextPage();
@@ -171,10 +193,10 @@ class Story {
     }
     
     stop() {
-        if (this.video_element && this.pages[this.page_index].data.type == "video") {
+        if (this.video_element) {
             this.video_element.pause();
         }
-        this.buttonPlay.classList.replace('fa-play', 'fa-pause');
+        this.buttonPlay.classList.replace('fa-pause', 'fa-play');
         pause();
         this.playing = false;
     }
@@ -184,13 +206,13 @@ class Story {
             if (this.video_element && this.pages[this.page_index].data.type == "video") {
                 this.video_element.pause();
             }
-            this.buttonPlay.classList.replace('fa-play', 'fa-pause');
+            this.buttonPlay.classList.replace('fa-pause', 'fa-play');
             pause();
         } else {
             if (this.video_element && this.pages[this.page_index].data.type == "video") {
                 this.video_element.play();
             }
-            this.buttonPlay.classList.replace('fa-pause', 'fa-play');
+            this.buttonPlay.classList.replace('fa-play', 'fa-pause');
             resume();
         }
         this.playing = !this.playing;
@@ -204,6 +226,19 @@ let ended = false;
 let focused_story = null;
 let timer = null;
 let main_element = null;
+
+document.getScroll = function() {
+    if (window.scrollY != undefined) {
+        return [scrollY, scrollX];
+    } else {
+        var sx, sy, d = document,
+            r = d.documentElement,
+            b = d.body;
+        sx = r.scrollLeft || b.scrollLeft || 0;
+        sy = r.scrollTop || b.scrollTop || 0;
+        return [sx, sy];
+    }
+}
 
 function createProgressBar() {
     let progressBar = document.createElement('input');
@@ -293,15 +328,24 @@ async function createGallery(stories_data) {
         if (data[0].type == "video") {
             let canvas = await getVideoCover(data[0].src);
             gallery_target.appendChild(canvas);
+            let story_index = index++;
+            canvas.onclick = () => viewStory(story_index);
             continue;
         } else {
             image = document.createElement('img');
             image.src = data[0].src;
+            image.className = 'stories-gallery-image';
+            let story_index = index++;
+            image.onclick = () => viewStory(story_index);
+            gallery_target.appendChild(image);
         }
-        image.className = 'stories-gallery-image';
-        //image.setAttribute('index', index++);
-        gallery_target.appendChild(image);
     }
+}
+
+function viewStory(index) {
+    main_element.classList.remove('behind');
+    focused_story = index;
+    start();
 }
 
 function nextPage() {
@@ -426,12 +470,22 @@ function halt() {
 
 function closeCarousel() {
     halt();
-    main_element.classList.add('behind');
+    if (focused_story != undefined) {
+        story_elements[focused_story].element.classList.remove('focused');
+    }
+    document.body.classList.remove('fixed');
+    main_element.style.visibility = "hidden";
 }
 
 function start() {
     started = true;
-    nextStory();
+    if (focused_story == null) focused_story = 0;
+    main_element.style.top = document.getScroll()[0] + "px";
+    main_element.style.visibility = "visible";
+    document.body.classList.add('fixed');
+    console.log(main_element.style.top);
+    story_elements[focused_story].element.classList.add("focused");
+    story_elements[focused_story].parent.classList.add("focused");
     restartInterval();
 }
 

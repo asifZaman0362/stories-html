@@ -1,3 +1,7 @@
+body.fixed {
+    overflow: hidden;
+    background: white;
+}
 
 .transparent-background-carousel {
     height: 100vh;
@@ -87,7 +91,7 @@
     background-color: black;
     position: relative;
     transform: scale(0.8);
-    transition: 0.5s ease-in-out;
+    transition: transform 0.5s ease-in-out;
 }
 
 .story.focused {
