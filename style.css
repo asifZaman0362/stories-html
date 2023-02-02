@@ -52,8 +52,8 @@ body.fixed {
     width: 300px;
     height: 300px;
     object-fit: cover;
-    padding: 10px;
-    background-color: rgba(250, 250, 255, 1);
+    padding: 5px;
+    background-color: black;
     box-shadow: 3px 3px 10px -4px rgba(0,0,0,0.53);
     -webkit-box-shadow: 3px 3px 10px -4px rgba(0,0,0,0.53);
     -moz-box-shadow: 3px 3px 10px -4px rgba(0,0,0,0.53);
@@ -64,8 +64,8 @@ body.fixed {
     width: 300px;
     height: 300px;
     object-fit: cover;
-    padding: 10px;
-    background-color: rgba(250, 250, 255, 1);
+    padding: 5px;
+    background-color: black;
     border-radius: 5px;
     box-shadow: 3px 3px 10px -4px rgba(0,0,0,0.53);
     -webkit-box-shadow: 3px 3px 10px -4px rgba(0,0,0,0.53);
@@ -92,6 +92,31 @@ body.fixed {
     position: relative;
     transform: scale(0.8);
     transition: transform 0.5s ease-in-out;
+}
+
+.spinner {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 40px;
+}
+
+.spinner::before {
+    animation: spin 2s linear 0s infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .story.focused {

@@ -25,6 +25,7 @@ class Story {
     buttonMute = null;
     muted = false;
     playing = false;
+    loaded = false;
 
     constructor(pages) {
         let storyParent = document.createElement('div');
@@ -58,6 +59,16 @@ class Story {
         buttonBar.appendChild(this.buttonPlay);
         this.buttonPlay.onclick = togglePlayPause;
         this.buttonMute.onclick = toggleMute;
+        
+        let spinner = document.createElement('i');
+        spinner.classList.add('fa-solid', 'fa-spinner', 'spinner');
+        this.spinner = spinner;
+        
+        let link_div = document.createElement('div');
+        link_div.className = 'link-container';
+        let link = document.createElement('a');
+        link.addEventListener('click', closeCarousel);
+        this.link = link;
 
         let mediaWrapper = document.createElement('div');
         mediaWrapper.className = "page-media-container";
@@ -65,13 +76,22 @@ class Story {
         this.video_element = document.createElement('video');
         this.video_element.autoplay = false;
         this.image_element = document.createElement('img');
-
+        this.image_element.onload = () => {
+            this.spinner.style.zIndex = -999;
+            this.loaded = true;
+        }
+        this.video_element.onloadeddata = () => {
+            this.spinner.style.zIndex = -999;
+            this.loaded = true;
+        }
         let cover = document.createElement('div');
         cover.className = "img-cover";
 
         mediaWrapper.appendChild(this.image_element);
         mediaWrapper.appendChild(this.video_element);
         mediaWrapper.appendChild(cover);
+        mediaWrapper.appendChild(link_div);
+        mediaWrapper.appendChild(spinner);
 
         storyElement.appendChild(progressBarContainer);
         storyElement.appendChild(buttonBar);
@@ -98,6 +118,8 @@ class Story {
     }
     
     nextPage() {
+        this.spinner.style.zIndex = "unset";
+        this.loaded = false;
         if (this.video_element) {
             this.video_element.pause();
         }
@@ -144,6 +166,7 @@ class Story {
     }
 
     prevPage() {
+        this.spinner.style.zIndex = "unset";
         if (this.video_element) this.video_element.pause();
         if (this.page_index == 0) {
             return false;
@@ -165,8 +188,12 @@ class Story {
     }
     
     tick() {
+        if (!this.loaded) {
+            return true;
+        }
         if (this.pages[this.page_index].data.type == 'video' && !this.playing) {
             this.buttonPlay.classList.replace('fa-pause', 'fa-play');
+            this.video_element.pause();
             return true;
         }
         let progressBar = this.pages[this.page_index].progressBar;
