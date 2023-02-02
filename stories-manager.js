@@ -63,6 +63,7 @@ class Story {
         mediaWrapper.className = "page-media-container";
 
         this.video_element = document.createElement('video');
+        this.video_element.autoplay = true;
         this.image_element = document.createElement('img');
 
         let cover = document.createElement('div');
@@ -76,10 +77,19 @@ class Story {
         storyElement.appendChild(buttonBar);
         storyElement.appendChild(mediaWrapper);
 
+        let vid = undefined;
+
         for (var page_data of pages) {
             let page = new StoryPage(page_data);
             this.pages.push(page);
             progressBarContainer.appendChild(page.progressBar);
+            let timer = page.progressBar;
+            if (page_data.type == "video") {
+                vid = this.video_element;
+                vid.addEventListener('loadedmetadata', () => {
+                    timer.max = (vid.duration / (TIMER_DURATION / 1000)) * 100;
+                });
+            }
         }
 
         this.element = storyElement;
@@ -88,6 +98,9 @@ class Story {
     }
     
     nextPage() {
+        if (this.video_element) {
+            this.video_element.pause();
+        }
         if (this.page_index == null) {
             this.page_index = 0;
         } else {
@@ -105,6 +118,7 @@ class Story {
             this.video_element.classList.remove('hidden');
             this.video_element.src = page.data.src;
             this.image_element.classList.add('hidden');
+            //this.video_element.play();
         }
         page.progressBar.value = 0;
         this.playing = true;
@@ -133,7 +147,7 @@ class Story {
     
     tick() {
         let progressBar = this.pages[this.page_index].progressBar;
-        if (Math.ceil(progressBar.value) >= progressBar.max) {
+        if (progressBar.value >= Math.floor(progressBar.max)) {
             return this.nextPage();
         } else {
             progressBar.value++;
@@ -142,14 +156,14 @@ class Story {
     }
     
     toggleMute() {
-        if (this.video_element && this.pages[this.page_index].type == "video") {
+        if (this.video_element && this.pages[this.page_index].data.type == "video") {
             if (this.muted) {
-                this.video_element.volume = 100;
-                this.buttonMute.classList.replace('fa-volume-off', 'fa-volume-high')
+                this.video_element.volume = 1;
+                this.buttonMute.classList.replace('fa-volume-xmark', 'fa-volume-high')
             }
             else {
                 this.video_element.volume = 0;
-                this.buttonMute.classList.replace('fa-volume-high', 'fa-volume-off')
+                this.buttonMute.classList.replace('fa-volume-high', 'fa-volume-xmark')
             }
             this.muted = !this.muted;
         }
@@ -244,14 +258,12 @@ function updateScroll() {
         let distanceToFocused = story_elements[focused_story].element.parentElement.offsetLeft;
         let elementSize = story_elements[focused_story].element.parentElement.clientWidth;
         let scroll = (-distanceToFocused + ((document.body.clientWidth - elementSize) / 2)) + "px";
-        console.log('scroll: ', distanceToFocused);
         carousel.style.left = scroll;
     }
 }
 
 function nextStory() {
     if (focused_story == null) {
-        console.log('start');
         focused_story = 0;
         story_elements[focused_story].element.classList.add("focused");
         story_elements[focused_story].parent.classList.add("focused");
